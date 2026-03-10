@@ -28,14 +28,26 @@ full.step isnt necessary thats just a CAD model wheres everything(Switches, esp3
 
 
 
-| Component | Link | Price |
-|----------|------|------|
-| ESP32 | idk | 10 usd max |
-| Screen | idk | idk |
-| Electrical tape | idk | 10 usd |
-| f-f cables | idk | 5 usd|
-| switches | idk | 5usd |
-
+| Component | Link | Price(czk) | Price(usd) | Shipping(czk) | Price total(usd) |
+|-----------|------|------------|------------|----------|-------------|
+| ESP32 mini| [link](https://allegro.cz/produkt/mikropocitac-cn-esp32c3fn4-561e3455-5297-4858-85b5-34fb4ad5f9d1) | 106 |      |       |      |
+| Screen | [link](https://www.laskakit.cz/128x160-barevny-lcd-tft-displej-1-8--spi/) | 168 |          |       |         |
+| Electrical tape | [link](https://www.thomann.de/cz/stairville_iso_band_black.htm) | 54 |          |      |            |
+| f-f cables | [link](https://allegro.cz/produkt/propojovaci-vodice-do-nepajiveho-pole-10cm-40ks-samec-samec-m-m-1f79dee5-74a9-457b-8bbd-581c4a35d8e5) | 46 |          |      |        |
+| switches | [link](https://allegro.cz/produkt/mechanicka-klavesnice-gateron-smoothie-10-ks-ac233cd7-7a06-48fe-928d-5950bc04e47c?offerId=15781277294) | 216 |       |      |               |
+| keycaps | [link](https://allegro.cz/produkt/mechanicka-klavesnice-standard-bila-ceb29029-df06-4d09-89bc-08d7a9c57a5f?offerId=11791904494) | 349 |         |          |     |
 
 > [!NOTE]
 > These products arent from popular websites such as amazon, since the shipping to EU could be more than the product itself
+
+<details>
+<summary>pictures</summary>
+<img width="818" height="552" alt="Screenshot 2026-03-10 161807" src="https://github.com/user-attachments/assets/bd055b28-fe2a-4e79-a664-01a3bd82f86d" />
+<img width="678" height="524" alt="Screenshot 2026-03-10 161817" src="https://github.com/user-attachments/assets/5f03cff7-7d61-4958-8b49-e92783690d2a" />
+<img width="844" height="518" alt="Screenshot 2026-03-10 161912" src="https://github.com/user-attachments/assets/a8a3ebb3-f485-4071-bb53-5b20692a08b4" />
+<img width="617" height="520" alt="Screenshot 2026-03-10 161923" src="https://github.com/user-attachments/assets/99e66ecc-a92d-44ab-beb7-222ee0c20fd3" />
+
+</details>
+
+
+
