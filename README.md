@@ -1,4 +1,6 @@
 # Spotify-Display
+<img width="775" height="534" alt="Screenshot 2026-03-12 165802" src="https://github.com/user-attachments/assets/4e8db362-b84b-4c52-b06b-3addbb595fa3" />
+
 This is my project for hackclub stasis it is a spotify display which displays current track playing with 3 buttons first stops/plays the track second goes to previous track and third skips track
 ## Setup
 -  Download [**Arduino IDE**](https://www.arduino.cc/en/software/)
