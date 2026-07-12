@@ -27,10 +27,6 @@ This is my project for hackclub stasis it is a spotify display which displays cu
 full.step isnt necessary thats just a CAD model wheres everything(Switches, esp32 etc..)
 
 
-> ⚠️ This project is for Hackclub stasis
-
-
-
 
 | Component          | Link                                                                                                                                    |  Price(usd) |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |  ---------- | 
@@ -46,8 +42,6 @@ full.step isnt necessary thats just a CAD model wheres everything(Switches, esp3
 ## final price is 21.05usd,
  calculated by combining all items in shopping carts(includes shipping)
                                                                                                                          
-> [!NOTE]
-> its for stasis
 
 
 <details>
