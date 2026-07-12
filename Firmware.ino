@@ -1,201 +1,257 @@
-#include <Arduino.h>
+#include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
-#include <WiFi.h>
-#include <SpotifyEsp32.h>
-#include <SPI.h>
 
-#define TFT_CS   1
-#define TFT_RST  2
-#define TFT_DC   3
-#define TFT_SCLK 4
-#define TFT_MOSI 5
+// pin assigment
+#define TFT_CS    5
+#define TFT_DC    8
+#define TFT_RST   7
+#define TFT_SCLK  4
+#define TFT_MOSI  6
 
-#define BTN_PREV      6
-#define BTN_PLAYPAUSE 7
-#define BTN_NEXT      8
-
-#define DEBOUNCE_MS 300
-
-const char* SSID           = "YOUR WIFI";
-const char* PASSWORD       = "YOUR PASS";
-const char* CLIENT_ID      = "YOUR CLIENT ID";
-const char* CLIENT_SECRET  = "YOUR CLIENT SECRET";
-const char* REFRESH_TOKEN  = "";
-
-#define INFO_X  70
-#define NAV_Y   116
-#define BAR_X_S 38
-#define BAR_X_E 122
-#define BAR_Y   88
-#define BAR_H   7
-#define TIME_Y  78
+#define BTN_P1_UP     10
+#define BTN_P1_DOWN   0   
+#define BTN_P2_UP     3 
+#define BTN_P2_DOWN   2   
+#define BTN_SERVE     9   
+#define BTN_RESET     1  
 
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
-Spotify sp(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
 
-String lastArtist = "";
-String lastTrack  = "";
-bool   isPlaying  = false;
+#define SCREEN_W 160
+#define SCREEN_H 128
 
-long         trackProgress = 0;
-long         trackDuration = 180000;
-unsigned long progressAt   = 0;
+#define PADDLE_W 4
+#define PADDLE_H 26
+#define PADDLE_SPEED 2
+#define P1_X 6
+#define P2_X (SCREEN_W - 6 - PADDLE_W)
 
-unsigned long lastPoll         = 0;
-unsigned long lastProgressDraw = 0;
-unsigned long lastBtnPress[3]  = {0, 0, 0};
+float p1Y = (SCREEN_H - PADDLE_H) / 2.0f;
+float p2Y = (SCREEN_H - PADDLE_H) / 2.0f;
+float p1YOld = p1Y, p2YOld = p2Y;
 
-const unsigned long POLL_MS          = 3000;
-const unsigned long PROGRESS_DRAW_MS = 1000;
+#define BALL_SIZE 4
+float ballX, ballY, ballXOld, ballYOld;
+float ballVX = 0, ballVY = 0;
+bool ballInPlay = false;
 
+int score1 = 0, score2 = 0;
+int score1Old = -1, score2Old = -1;
 
-String truncate(String s, int n) {
-  if (s.length() <= n) return s;
-  return s.substring(0, n - 2) + "..";
+#define FIELD_TOP 14
+#define FIELD_BOTTOM (SCREEN_H - 1)
+
+unsigned long lastFrame = 0;
+
+bool paused = false;
+int resetBtnPrevState = HIGH;
+unsigned long resetPressStart = 0;
+bool resetHoldTriggered = false;
+const unsigned long RESET_HOLD_MS = 2000;
+
+void resetBall(int direction) {
+  ballX = SCREEN_W / 2.0f;
+  ballY = (FIELD_TOP + FIELD_BOTTOM) / 2.0f;
+  ballXOld = ballX;
+  ballYOld = ballY;
+  ballInPlay = false;
+  ballVX = 1.1f * direction;
+  ballVY = ((millis() % 2 == 0) ? 1.0f : -1.0f) * 0.7f;
 }
 
-
-String fmtMs(long ms) {
-  char buf[8];
-  snprintf(buf, sizeof(buf), "%d:%02d", (int)(ms / 60000), (int)((ms / 1000) % 60));
-  return String(buf);
+void drawCourt() {
+  tft.fillScreen(ST77XX_BLACK);
+  for (int y = FIELD_TOP; y < FIELD_BOTTOM; y += 8) {
+    tft.drawFastVLine(SCREEN_W / 2, y, 4, ST77XX_WHITE);
+  }
+  tft.drawFastHLine(0, FIELD_TOP - 2, SCREEN_W, ST77XX_RED);
+  score1Old = -1; score2Old = -1;
+  drawScore();
+  p1YOld = -100; p2YOld = -100;
+  ballXOld = -100;
 }
 
-
-void drawPlayIcon(bool playing, uint16_t col) {
-  int cx = 80;
-  int cy = NAV_Y;
-
-  tft.fillRect(cx - 10, cy - 9, 22, 19, ST77XX_BLACK);
-
-  if (playing) {
-    tft.fillRect(cx - 8, cy - 8, 5, 16, col);
-    tft.fillRect(cx + 3, cy - 8, 5, 16, col);
-  } else {
-    tft.fillTriangle(cx - 7, cy - 9, cx - 7, cy + 9, cx + 9, cy, col);
+void drawScore() {
+  if (score1 != score1Old || score2 != score2Old) {
+    tft.fillRect(0, 0, SCREEN_W, FIELD_TOP - 2, ST77XX_BLACK);
+    tft.setTextSize(1);
+    tft.setTextColor(ST77XX_GREEN);
+    tft.setCursor(SCREEN_W / 2 - 30, 3);
+    tft.print("P1:");
+    tft.print(score1);
+    tft.setCursor(SCREEN_W / 2 + 10, 3);
+    tft.print("P2:");
+    tft.print(score2);
+    score1Old = score1;
+    score2Old = score2;
   }
 }
 
-
-void drawProgress() {
-  long elapsed = trackProgress + (millis() - progressAt);
-  if (elapsed > trackDuration) elapsed = trackDuration;
-
-  tft.fillRect(0, TIME_Y - 2, 160, 30, ST77XX_BLACK);
-
-  String el  = fmtMs(elapsed);
-  String dur = fmtMs(trackDuration);
-
-  tft.setCursor(BAR_X_S - el.length() * 6 - 3, TIME_Y);
-  tft.print(el);
-
-  tft.setCursor(BAR_X_E + 3, TIME_Y);
-  tft.print(dur);
-
-  tft.fillRoundRect(BAR_X_S, BAR_Y, BAR_X_E - BAR_X_S, BAR_H, 3, 0x2945);
-
-  int fillW = (BAR_X_E - BAR_X_S) * elapsed / trackDuration;
-  tft.fillRoundRect(BAR_X_S, BAR_Y, fillW, BAR_H, 3, ST77XX_GREEN);
-}
-
-
-void drawTrackInfo() {
-  tft.fillRect(INFO_X, 0, 160 - INFO_X, 60, ST77XX_BLACK);
-
-  tft.setCursor(INFO_X, 8);
-  tft.setTextColor(ST77XX_CYAN);
-  tft.print(truncate(lastArtist, 14));
-
-  tft.setCursor(INFO_X, 28);
+void drawPauseOverlay() {
+  int boxW = 74, boxH = 26;
+  int boxX = (SCREEN_W - boxW) / 2;
+  int boxY = (SCREEN_H - boxH) / 2;
+  tft.fillRect(boxX, boxY, boxW, boxH, ST77XX_BLACK);
+  tft.drawRect(boxX, boxY, boxW, boxH, ST77XX_WHITE);
+  tft.setTextSize(1);
   tft.setTextColor(ST77XX_WHITE);
-  tft.print(truncate(lastTrack, 14));
+  tft.setCursor(boxX + 12, boxY + 10);
+  tft.print("PAUSED");
 }
 
-
-void pollSpotify() {
-  String artist = sp.current_artist_names();
-  String track  = sp.current_track_name();
-  bool   play   = sp.is_playing();
-
-  if (artist == "" || track == "") return;
-
-  if (play != isPlaying) {
-    isPlaying = play;
-    drawPlayIcon(isPlaying, isPlaying ? ST77XX_GREEN : ST77XX_YELLOW);
-    if (isPlaying) progressAt = millis() - trackProgress;
-  }
-
-  bool changed = (artist != lastArtist || track != lastTrack);
-
-  if (changed) {
-    lastArtist    = artist;
-    lastTrack     = track;
-    trackProgress = 0;
-    progressAt    = millis();
-    drawTrackInfo();
-  }
+void fullReset() {
+  score1 = 0;
+  score2 = 0;
+  p1Y = (SCREEN_H - PADDLE_H) / 2.0f;
+  p2Y = (SCREEN_H - PADDLE_H) / 2.0f;
+  resetBall((millis() % 2 == 0) ? -1 : 1);
+  paused = false;
+  drawCourt();
 }
 
+void handlePauseResetButton() {
+  int reading = digitalRead(BTN_RESET);
+
+  if (reading == LOW && resetBtnPrevState == HIGH) {
+    resetPressStart = millis();
+    resetHoldTriggered = false;
+  }
+
+  if (reading == LOW && !resetHoldTriggered) {
+    if (millis() - resetPressStart >= RESET_HOLD_MS) {
+      fullReset();
+      resetHoldTriggered = true;
+    }
+  }
+
+  if (reading == HIGH && resetBtnPrevState == LOW) {
+    if (!resetHoldTriggered) {
+      paused = !paused;
+      if (paused) {
+        drawPauseOverlay();
+      } else {
+        drawCourt();
+      }
+    }
+  }
+
+  resetBtnPrevState = reading;
+}
 
 void setup() {
   Serial.begin(115200);
 
-  pinMode(BTN_PREV,      INPUT_PULLUP);
-  pinMode(BTN_PLAYPAUSE, INPUT_PULLUP);
-  pinMode(BTN_NEXT,      INPUT_PULLUP);
+  pinMode(BTN_P1_UP, INPUT_PULLUP);
+  pinMode(BTN_P1_DOWN, INPUT_PULLUP);
+  pinMode(BTN_P2_UP, INPUT_PULLUP);
+  pinMode(BTN_P2_DOWN, INPUT_PULLUP);
+  pinMode(BTN_SERVE, INPUT_PULLUP);
+  pinMode(BTN_RESET, INPUT_PULLUP);
 
   tft.initR(INITR_BLACKTAB);
   tft.setRotation(1);
   tft.fillScreen(ST77XX_BLACK);
 
-  WiFi.begin(SSID, PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) { delay(500); }
+  tft.setTextColor(ST77XX_WHITE);
+  tft.setTextSize(1);
+  tft.setCursor(50, 55);
+  tft.println("PONG");
+  tft.setCursor(20, 70);
+  tft.println("Press SERVE to start");
+  delay(1200);
 
-  sp.set_scopes("user-read-playback-state user-modify-playback-state");
-  sp.begin();
-  while (!sp.is_auth()) { sp.handle_client(); }
+  resetBall((millis() % 2 == 0) ? -1 : 1);
+  drawCourt();
 
-  pollSpotify();
-  drawPlayIcon(false, ST77XX_YELLOW);
+  lastFrame = millis();
 }
 
+void handleInput() {
+  if (digitalRead(BTN_P1_UP) == LOW)   p1Y -= PADDLE_SPEED;
+  if (digitalRead(BTN_P1_DOWN) == LOW) p1Y += PADDLE_SPEED;
+  if (digitalRead(BTN_P2_UP) == LOW)   p2Y -= PADDLE_SPEED;
+  if (digitalRead(BTN_P2_DOWN) == LOW) p2Y += PADDLE_SPEED;
+
+  if (p1Y < FIELD_TOP) p1Y = FIELD_TOP;
+  if (p1Y > FIELD_BOTTOM - PADDLE_H) p1Y = FIELD_BOTTOM - PADDLE_H;
+  if (p2Y < FIELD_TOP) p2Y = FIELD_TOP;
+  if (p2Y > FIELD_BOTTOM - PADDLE_H) p2Y = FIELD_BOTTOM - PADDLE_H;
+
+  if (!ballInPlay && digitalRead(BTN_SERVE) == LOW) {
+    ballInPlay = true;
+  }
+}
+
+void updateBall() {
+  if (!ballInPlay) return;
+
+  ballX += ballVX;
+  ballY += ballVY;
+
+  if (ballY <= FIELD_TOP) { ballY = FIELD_TOP; ballVY = -ballVY; }
+  if (ballY >= FIELD_BOTTOM - BALL_SIZE) { ballY = FIELD_BOTTOM - BALL_SIZE; ballVY = -ballVY; }
+
+  if (ballX <= P1_X + PADDLE_W && ballX >= P1_X &&
+      ballY + BALL_SIZE >= p1Y && ballY <= p1Y + PADDLE_H && ballVX < 0) {
+    ballX = P1_X + PADDLE_W;
+    ballVX = -ballVX * 1.03f;
+    float hitPos = ((ballY - p1Y) / PADDLE_H) - 0.5f;
+    ballVY += hitPos * 1.6f;
+  }
+  if (ballX + BALL_SIZE >= P2_X && ballX <= P2_X + PADDLE_W &&
+      ballY + BALL_SIZE >= p2Y && ballY <= p2Y + PADDLE_H && ballVX > 0) {
+    ballX = P2_X - BALL_SIZE;
+    ballVX = -ballVX * 1.03f;
+    float hitPos = ((ballY - p2Y) / PADDLE_H) - 0.5f;
+    ballVY += hitPos * 1.6f;
+  }
+
+  if (ballVY > 3) ballVY = 3;
+  if (ballVY < -3) ballVY = -3;
+
+  if (ballX < 0) {
+    score2++;
+    resetBall(1);
+    drawCourt();
+  } else if (ballX > SCREEN_W) {
+    score1++;
+    resetBall(-1);
+    drawCourt();
+  }
+}
+
+void render() {
+  if ((int)p1YOld != (int)p1Y) {
+    tft.fillRect(P1_X, FIELD_TOP, PADDLE_W, FIELD_BOTTOM - FIELD_TOP, ST77XX_BLACK);
+    tft.fillRect(P1_X, (int)p1Y, PADDLE_W, PADDLE_H, ST77XX_CYAN);
+    p1YOld = p1Y;
+  }
+  if ((int)p2YOld != (int)p2Y) {
+    tft.fillRect(P2_X, FIELD_TOP, PADDLE_W, FIELD_BOTTOM - FIELD_TOP, ST77XX_BLACK);
+    tft.fillRect(P2_X, (int)p2Y, PADDLE_W, PADDLE_H, ST77XX_YELLOW);
+    p2YOld = p2Y;
+  }
+
+  if ((int)ballXOld != (int)ballX || (int)ballYOld != (int)ballY) {
+    tft.fillRect((int)ballXOld, (int)ballYOld, BALL_SIZE, BALL_SIZE, ST77XX_BLACK);
+    tft.fillRect((int)ballX, (int)ballY, BALL_SIZE, BALL_SIZE, ST77XX_WHITE);
+    ballXOld = ballX;
+    ballYOld = ballY;
+  }
+
+  drawScore();
+}
 
 void loop() {
   unsigned long now = millis();
+  if (now - lastFrame < 16) return;
+  lastFrame = now;
 
-  // previous
-  if (digitalRead(BTN_PREV) == LOW && now - lastBtnPress[0] > DEBOUNCE_MS) {
-    lastBtnPress[0] = now;
-    sp.previous();
-  }
+  handlePauseResetButton();
+  if (paused) return;
 
-  // play / stop
-  if (digitalRead(BTN_PLAYPAUSE) == LOW && now - lastBtnPress[1] > DEBOUNCE_MS) {
-    lastBtnPress[1] = now;
-    if (isPlaying) {
-      sp.pause_playback();
-      isPlaying = false;
-    } else {
-      sp.start_resume_playback();
-      isPlaying = true;
-    }
-    drawPlayIcon(isPlaying, isPlaying ? ST77XX_GREEN : ST77XX_YELLOW);
-  }
-
-  // next
-  if (digitalRead(BTN_NEXT) == LOW && now - lastBtnPress[2] > DEBOUNCE_MS) {
-    lastBtnPress[2] = now;
-    sp.skip();
-  }
-
-  if (now - lastPoll >= POLL_MS) {
-    lastPoll = now;
-    pollSpotify();
-  }
-
-  if (now - lastProgressDraw >= PROGRESS_DRAW_MS && isPlaying) {
-    lastProgressDraw = now;
-    drawProgress();
-  }
+  handleInput();
+  updateBall();
+  render();
 }
