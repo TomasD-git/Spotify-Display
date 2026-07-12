@@ -27,6 +27,8 @@ This is my project for hackclub stasis it is a spotify display which displays cu
 ### install all CAD files (main.step and back.step)  
 full.step isnt necessary thats just a CAD model wheres everything(Switches, esp32 etc..)
 
+<details>
+<summary>BOM</summary>
 
 
 | Component          | Link                                                                                                                                    |  Price(usd) |
@@ -38,7 +40,7 @@ full.step isnt necessary thats just a CAD model wheres everything(Switches, esp3
 | keycaps            | [link](https://www.aliexpress.com/item/1005006625525296.html?spm=a2g0o.cart.0.0.23ab38dam5pIo1&mp=1&pdp_npi=6%40dis%21USD%21USD%203.50%21USD%203.50%21%21USD%203.50%21%21%21%40211b612517736600605951389e7284%2112000037857008300%21ct%21CZ%217428457144%21%211%210%21)                                                                                   |  3.50          |  
 | **Total**          |                                                                                                                                         |  **21.05**  | 
 
-
+</details>
 
 ## final price is 21.05usd,
  calculated by combining all items in shopping carts(includes shipping)
