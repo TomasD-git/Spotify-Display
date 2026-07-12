@@ -2,9 +2,11 @@
 <img width="877" height="669" alt="image" src="https://github.com/user-attachments/assets/33b59d6e-c3b7-4cba-bda3-cfeaf7dfca95" />
 <img width="813" height="673" alt="image" src="https://github.com/user-attachments/assets/08e300dc-b04f-4c86-9478-9c570dc34b19" />
 <img width="1500" height="2000" alt="image" src="https://github.com/user-attachments/assets/a4a65527-c087-4758-a586-32c435527822" />
-#### Originally Spotify display
 
-This is my project for hackclub stasis it is a spotify display which displays current track playing with 3 buttons first stops/plays the track second goes to previous track and third skips track + 3 programmable macro keys
+##### Originally Spotify display
+
+it is a pong display, on which u can play pong with your friend has 7 buttons and a screen controller by esp32 c3 super mini, 4 keys are reserved for player movments(up and down for both players), and 2 for pause and serve  
+
 ## Setup
 -  Download [**Arduino IDE**](https://www.arduino.cc/en/software/)
 -  Download all libraries
