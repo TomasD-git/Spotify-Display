@@ -6,6 +6,9 @@
 ##### Originally Spotify display
 
 it is a pong display, on which u can play pong with your friend has 7 buttons and a screen controller by esp32 c3 super mini, 4 keys are reserved for player movments(up and down for both players), and 2 for pause and serve  
+## Showcase  
+[video](https://github.com/TomasD-git/PONG-Display/blob/main/Pictures/pong%20showcase.mp4)  
+
 
 ## Setup
 -  Download [**Arduino IDE**](https://www.arduino.cc/en/software/)
