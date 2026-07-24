@@ -1,3 +1,4 @@
+
 # PONG-Display
 <img width="877" height="669" alt="image" src="https://github.com/user-attachments/assets/33b59d6e-c3b7-4cba-bda3-cfeaf7dfca95" />
 <img width="813" height="673" alt="image" src="https://github.com/user-attachments/assets/08e300dc-b04f-4c86-9478-9c570dc34b19" />
@@ -6,8 +7,17 @@
 ##### Originally Spotify display
 
 it is a pong display, on which u can play pong with your friend has 7 buttons and a screen controller by esp32 c3 super mini, 4 keys are reserved for player movments(up and down for both players), and 2 for pause and serve  
+
+## Controls  
+Left top and bottom are for player 1 up and down movment.  
+Right top and bottom are for player 2 up and down movment.  
+Midle top is for serve(serves the ball).  
+Midle bottom has 2 features, click it pauses the game, hold for 3 seconds and it resets score.  
+
+
 ## Showcase  
-[video](https://github.com/TomasD-git/PONG-Display/blob/main/Pictures/pong%20showcase.mp4)  
+
+https://github.com/user-attachments/assets/837140ae-edc6-4c95-8f8d-abdc747a51e3
 
 
 ## Setup
