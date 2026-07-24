@@ -65,14 +65,6 @@ calculated by combining all items in shopping carts(includes shipping)
                                                                                                                          
 
 
-<details>
-<summary>pictures</summary>
-<img width="818" height="552" alt="Screenshot 2026-03-10 161807" src="https://github.com/user-attachments/assets/bd055b28-fe2a-4e79-a664-01a3bd82f86d" />
-<img width="678" height="524" alt="Screenshot 2026-03-10 161817" src="https://github.com/user-attachments/assets/5f03cff7-7d61-4958-8b49-e92783690d2a" />
-<img width="844" height="518" alt="Screenshot 2026-03-10 161912" src="https://github.com/user-attachments/assets/a8a3ebb3-f485-4071-bb53-5b20692a08b4" />
-<img width="617" height="520" alt="Screenshot 2026-03-10 161923" src="https://github.com/user-attachments/assets/99e66ecc-a92d-44ab-beb7-222ee0c20fd3" />
-
-</details>
 
 
 
